@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="dashboard/assets/css/style.css">
 </head>
 <body>
     <div class="login-container">
@@ -25,7 +25,7 @@
 </html>
 
 <?php
-include_once('db.php');
+include_once('dashboard/db.php');
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -51,12 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Redirect based on role
             if ($_SESSION['role'] === 'admin') {
-                header('Location: dashboard.php'); // Admin Dashboard
+                header('Location: dashboard/dashboard.php'); // Admin Dashboard
                 exit();
             } else {
                 // Redirect non-admin users to a different page
                 echo "<script type='text/javascript'>
-                        alert('You are not an admin, redirecting to user dashboard.');
+                        alert('welcome user');
                         window.location.href = '../index.html';
                       </script>";
                 exit();

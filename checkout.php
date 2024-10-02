@@ -1,5 +1,5 @@
 <?php
-include('dashboard/session.php');
+include('userSession.php');
 include_once('dashboard/db.php');
 
 // Function to get cart items for the current user
@@ -150,5 +150,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         cursor: pointer;
     }
 </style>
-
-<?php include('includes/footer.php'); ?>
