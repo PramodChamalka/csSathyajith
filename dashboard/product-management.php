@@ -11,6 +11,47 @@ function getAllProducts() {
     return $result->fetch_all(MYSQLI_ASSOC);
 }
 
+// Function to handle file upload
+function uploadFile($file) {
+    $target_dir = "uploads/";
+    $target_file = $target_dir . basename($file["name"]);
+    $uploadOk = 1;
+    $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+
+    // Check if image file is a actual image or fake image
+    $check = getimagesize($file["tmp_name"]);
+    if($check !== false) {
+        $uploadOk = 1;
+    } else {
+        echo "<script>alert('File is not an image.');</script>";
+        $uploadOk = 0;
+    }
+
+    // Check file size
+    if ($file["size"] > 50000000) {
+        echo "<script>alert('Sorry, your file is too large.');</script>";
+        $uploadOk = 0;
+    }
+
+    // Allow certain file formats
+    if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
+    && $imageFileType != "gif" ) {
+        echo "<script>alert('Sorry, only JPG, JPEG, PNG & GIF files are allowed.');</script>";
+        $uploadOk = 0;
+    }
+
+    // if everything is ok, try to upload file
+    if ($uploadOk == 1) {
+        if (move_uploaded_file($file["tmp_name"], $target_file)) {
+            return $target_file;
+        } else {
+            echo "<script>alert('Sorry, there was an error uploading your file.');</script>";
+            return false;
+        }
+    }
+    return false;
+}
+
 // Create product
 if (isset($_POST['create_product'])) {
     $name = $_POST['name'];
@@ -19,16 +60,21 @@ if (isset($_POST['create_product'])) {
     $light_requirement = $_POST['light_requirement'];
     $water_requirement = $_POST['water_requirement'];
     $max_growth = $_POST['max_growth'];
+    $stock = $_POST['stock'];
 
-    $sql = "INSERT INTO products (name, price, description, light_requirement, water_requirement, max_growth) VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sdssss", $name, $price, $description, $light_requirement, $water_requirement, $max_growth);
-    if ($stmt->execute()) {
-        echo "<script>alert('Product created successfully');</script>";
-    } else {
-        echo "<script>alert('Error creating product: " . $stmt->error . "');</script>";
+    $image_path = uploadFile($_FILES["image"]);
+
+    if ($image_path) {
+        $sql = "INSERT INTO products (name, price, description, light_requirement, water_requirement, max_growth, image_path, stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sdsssssi", $name, $price, $description, $light_requirement, $water_requirement, $max_growth, $image_path, $stock);
+        if ($stmt->execute()) {
+            echo "<script>alert('Product created successfully');</script>";
+        } else {
+            echo "<script>alert('Error creating product: " . $stmt->error . "');</script>";
+        }
+        $stmt->close();
     }
-    $stmt->close();
 }
 
 // Update product
@@ -40,10 +86,23 @@ if (isset($_POST['update_product'])) {
     $light_requirement = $_POST['light_requirement'];
     $water_requirement = $_POST['water_requirement'];
     $max_growth = $_POST['max_growth'];
+    $stock = $_POST['stock'];
 
-    $sql = "UPDATE products SET name = ?, price = ?, description = ?, light_requirement = ?, water_requirement = ?, max_growth = ? WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sdssssi", $name, $price, $description, $light_requirement, $water_requirement, $max_growth, $id);
+    $image_path = null;
+    if ($_FILES["image"]["size"] > 0) {
+        $image_path = uploadFile($_FILES["image"]);
+    }
+
+    if ($image_path) {
+        $sql = "UPDATE products SET name = ?, price = ?, description = ?, light_requirement = ?, water_requirement = ?, max_growth = ?, image_path = ?, stock = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sdssssssi", $name, $price, $description, $light_requirement, $water_requirement, $max_growth, $image_path, $stock, $id);
+    } else {
+        $sql = "UPDATE products SET name = ?, price = ?, description = ?, light_requirement = ?, water_requirement = ?, max_growth = ?, stock = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sdssssii", $name, $price, $description, $light_requirement, $water_requirement, $max_growth, $stock, $id);
+    }
+
     if ($stmt->execute()) {
         echo "<script>alert('Product updated successfully');</script>";
     } else {
@@ -81,64 +140,66 @@ $products = getAllProducts();
             <!-- Product List -->
             <h2>Product List</h2>
             <table class="product-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Price</th>
-                        <th>Description</th>
-                        <th>Light Requirement</th>
-                        <th>Water Requirement</th>
-                        <th>Max Growth</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($products as $product): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($product['name']); ?></td>
-                        <td>$<?php echo htmlspecialchars($product['price']); ?></td>
-                        <td><?php echo htmlspecialchars($product['description']); ?></td>
-                        <td><?php echo htmlspecialchars($product['light_requirement']); ?></td>
-                        <td><?php echo htmlspecialchars($product['water_requirement']); ?></td>
-                        <td><?php echo htmlspecialchars($product['max_growth']); ?></td>
-                        <td>
-                            <button class="update-btn" onclick='openUpdateModal(<?php echo json_encode($product); ?>)'>Update</button>
-                            <form method="post" style="display: inline;">
-                                <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
-                                <button class="delete-btn" type="submit" name="delete_product" onclick="return confirm('Are you sure you want to delete this product?')">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </main>
-</div>
+    <thead>
+        <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Description</th>
+            <th>Light Requirement</th>
+            <th>Water Requirement</th>
+            <th>Max Growth</th>
+            <th>Stock</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($products as $product): ?>
+        <tr>
+            <td><img src="<?php echo htmlspecialchars($product['image_path']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" width="100"></td>
+            <td><?php echo htmlspecialchars($product['name']); ?></td>
+            <td>$<?php echo htmlspecialchars($product['price']); ?></td>
+            <td><?php echo htmlspecialchars($product['description']); ?></td>
+            <td><?php echo htmlspecialchars($product['light_requirement']); ?></td>
+            <td><?php echo htmlspecialchars($product['water_requirement']); ?></td>
+            <td><?php echo htmlspecialchars($product['max_growth']); ?></td>
+            <td><?php echo htmlspecialchars($product['stock']); ?></td>
+            <td>
+                <button class="update-btn" onclick='openUpdateModal(<?php echo json_encode($product); ?>)'>Update</button>
+                <form method="post" style="display: inline;">
+                    <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                    <button class="delete-btn" type="submit" name="delete_product" onclick="return confirm('Are you sure you want to delete this product?')">Delete</button>
+                </form>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
 
-<!-- Create Product Modal -->
+<!-- Update the create and update modals to include the stock field -->
 <div id="createModal" class="modal">
     <div class="modal-content">
         <span class="close-create">&times;</span>
         <h2>Add New Product</h2>
-        <form method="post" class="product-form">
+        <form method="post" class="product-form" enctype="multipart/form-data">
             <input type="text" name="name" placeholder="Product Name" required>
             <input type="number" name="price" placeholder="Price" step="0.01" required>
             <textarea name="description" placeholder="Description" required></textarea>
             <input type="text" name="light_requirement" placeholder="Light Requirement" required>
             <input type="text" name="water_requirement" placeholder="Water Requirement" required>
             <input type="text" name="max_growth" placeholder="Maximum Growth" required>
+            <input type="number" name="stock" placeholder="Stock" required>
+            <input type="file" name="image" accept="image/*" required>
             <button type="submit" name="create_product">Add Product</button>
         </form>
     </div>
 </div>
 
-<!-- Update Product Modal -->
 <div id="updateModal" class="modal">
     <div class="modal-content">
         <span class="close-update">&times;</span>
         <h2>Update Product</h2>
-        <form id="updateForm" method="post" class="product-form">
+        <form id="updateForm" method="post" class="product-form" enctype="multipart/form-data">
             <input type="hidden" id="update_product_id" name="product_id">
             <input type="text" id="update_name" name="name" placeholder="Product Name" required>
             <input type="number" id="update_price" name="price" placeholder="Price" step="0.01" required>
@@ -146,6 +207,9 @@ $products = getAllProducts();
             <input type="text" id="update_light_requirement" name="light_requirement" placeholder="Light Requirement" required>
             <input type="text" id="update_water_requirement" name="water_requirement" placeholder="Water Requirement" required>
             <input type="text" id="update_max_growth" name="max_growth" placeholder="Maximum Growth" required>
+            <input type="number" id="update_stock" name="stock" placeholder="Stock" required>
+            <input type="file" name="image" accept="image/*">
+            <p>Leave image field empty if you don't want to change the image.</p>
             <button type="submit" name="update_product">Update Product</button>
         </form>
     </div>
@@ -190,4 +254,8 @@ window.onclick = function(event) {
 }
 </script>
 
-<?php include('includes/footer.php'); ?>
+<?php 
+
+// include('includes/footer.php');
+
+?>
