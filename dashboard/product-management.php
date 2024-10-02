@@ -1,6 +1,6 @@
 <?php
 include('includes/header.php');
-include('session.php');
+// include('session.php');
 include_once('db.php');
 
 // Function to get all products
