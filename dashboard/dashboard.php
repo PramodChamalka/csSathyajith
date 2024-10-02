@@ -1,4 +1,5 @@
-<?php include('includes/header.php'); ?>
+<?php include('includes/header.php'); 
+include('session.php');?>
 <div class="dashboard-container">
     <?php include('includes/sidebar.php'); ?>
     <main>
