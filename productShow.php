@@ -2,8 +2,8 @@
 include('userSession.php');
 include_once('dashboard/db.php');
 
-// Fetch products from the database with all fields
-$sql = "SELECT id, name, price, image_path, stock, description, light_requirement, water_requirement, max_growth FROM products";
+// Fetch products from the database
+$sql = "SELECT id, name, price, image_path, stock, description, light_requirement, water_requirement, max_growth FROM products  WHERE is_active = TRUE";
 $result = $conn->query($sql);
 $products = $result->fetch_all(MYSQLI_ASSOC);
 
@@ -19,7 +19,6 @@ if (isset($_SESSION['user_id'])) {
     $cart_count = $cart_result->fetch_assoc()['count'] ?? 0;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,17 +41,6 @@ if (isset($_SESSION['user_id'])) {
             border-radius: 50%;
             padding: 2px 6px;
             font-size: 12px;
-        }
-        .product__stock {
-            font-size: 0.8em;
-            color: #666;
-            margin-top: 5px;
-        }
-        .product__description,
-        .product__details {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 5px;
         }
     </style>
 </head>
@@ -87,7 +75,9 @@ if (isset($_SESSION['user_id'])) {
             <div class="nav__btns">
                 <div class="cart-icon" id="cart-icon">
                     <i class="ri-shopping-cart-line"></i>
-                    <span class="cart-count"><?php echo $cart_count; ?></span>
+                    <?php if ($cart_count > 0): ?>
+                        <span class="cart-count"><?php echo $cart_count; ?></span>
+                    <?php endif; ?>
                 </div>
                 <i class="ri-moon-line change-theme" id="theme-button"></i>
                 <div class="nav__toggle" id="nav-toggle">
@@ -113,15 +103,11 @@ if (isset($_SESSION['user_id'])) {
                 <article class="product__card" data-product-id="<?php echo $product['id']; ?>">
                     <div class="product__circle"></div>
 
-                    <img src="<?php echo htmlspecialchars($product['image_path']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="product__img">
+                 
+                    <img src="<?php echo htmlspecialchars('dashboard/' . $product['image_path']); ?>" alt="" class="product__img">
 
                     <h3 class="product__title"><?php echo htmlspecialchars($product['name']); ?></h3>
                     <span class="product__price">$<?php echo number_format($product['price'], 2); ?></span>
-                    <p class="product__stock">In stock: <?php echo $product['stock']; ?></p>
-                    <p class="product__description"><?php echo htmlspecialchars($product['description']); ?></p>
-                    <p class="product__details">Light: <?php echo htmlspecialchars($product['light_requirement']); ?></p>
-                    <p class="product__details">Water: <?php echo htmlspecialchars($product['water_requirement']); ?></p>
-                    <p class="product__details">Max Growth: <?php echo htmlspecialchars($product['max_growth']); ?></p>
 
                     <button class="button--flex product__button add-to-cart-btn" <?php echo $product['stock'] > 0 ? '' : 'disabled'; ?>>
                         <i class="ri-shopping-bag-line"></i>
@@ -133,7 +119,71 @@ if (isset($_SESSION['user_id'])) {
     </main>
 
     <footer class="footer section">
-        <!-- Footer content here -->
+        <div class="footer__container container grid">
+            <div class="footer__content">
+                <a href="#" class="footer__logo">
+                    <i class="ri-leaf-line footer__logo-icon"></i> Plantex
+                </a>
+
+                <h3 class="footer__title">
+                    Subscribe to our newsletter <br> to stay updated
+                </h3>
+
+                <div class="footer__subscribe">
+                    <input type="email" placeholder="Enter your email" class="footer__input">
+
+                    <button class="button button--flex footer__button">
+                        Subscribe
+                        <i class="ri-arrow-right-up-line button__icon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="footer__content">
+                <h3 class="footer__title">Our Address</h3>
+
+                <ul class="footer__data">
+                    <li class="footer__information">1234 - Botanical Street</li>
+                    <li class="footer__information">Green City - 43210</li>
+                    <li class="footer__information">123-456-789</li>
+                </ul>
+            </div>
+
+            <div class="footer__content">
+                <h3 class="footer__title">Contact Us</h3>
+
+                <ul class="footer__data">
+                    <li class="footer__information">+999 888 777</li>
+                    
+                    <div class="footer__social">
+                        <a href="https://www.facebook.com/" class="footer__social-link">
+                            <i class="ri-facebook-fill"></i>
+                        </a>
+                        <a href="https://www.instagram.com/" class="footer__social-link">
+                            <i class="ri-instagram-line"></i>
+                        </a>
+                        <a href="https://twitter.com/" class="footer__social-link">
+                            <i class="ri-twitter-fill"></i>
+                        </a>
+                    </div>
+                </ul>
+            </div>
+
+            <div class="footer__content">
+                <h3 class="footer__title">
+                    We accept all credit cards
+                </h3>
+
+                <div class="footer__cards">
+                    <img src="assets/img/card1.png" alt="" class="footer__card">
+                    <img src="assets/img/card2.png" alt="" class="footer__card">
+                    <img src="assets/img/card3.png" alt="" class="footer__card">
+                    <img src="assets/img/card4.png" alt="" class="footer__card">
+                </div>
+            </div>
+        </div>
+
+        <p class="footer__copy">&#169; Plantex. All rights reserved</p>
     </footer>
     
     <a href="#" class="scrollup" id="scroll-up"> 
@@ -148,37 +198,30 @@ if (isset($_SESSION['user_id'])) {
             $('.add-to-cart-btn').on('click', function() {
                 var $btn = $(this);
                 var productId = $btn.closest('.product__card').data('product-id');
-                var $stockElement = $btn.siblings('.product__stock');
-                var currentStock = parseInt($stockElement.text().split(': ')[1]);
 
-                if (currentStock > 0) {
-                    $.ajax({
-                        url: 'add_to_cart.php',
-                        method: 'POST',
-                        data: { product_id: productId },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.success) {
-                                alert(response.message);
-                                // Update cart count
-                                var $cartCount = $('.cart-count');
-                                $cartCount.text(parseInt($cartCount.text()) + 1);
-                                // Update stock
-                                $stockElement.text('In stock: ' + (currentStock - 1));
-                                if (currentStock - 1 === 0) {
-                                    $btn.prop('disabled', true);
-                                }
-                            } else {
-                                alert('Error: ' + response.message);
+                $.ajax({
+                    url: 'add_to_cart.php',
+                    method: 'POST',
+                    data: { product_id: productId },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            // Update cart count
+                            var $cartCount = $('.cart-count');
+                            var currentCount = parseInt($cartCount.text() || '0');
+                            $cartCount.text(currentCount + 1);
+                            if (currentCount === 0) {
+                                $cartCount.show();
                             }
-                        },
-                        error: function() {
-                            alert('Error adding product to cart. Please try again.');
+                        } else {
+                            alert('Error: ' + response.message);
                         }
-                    });
-                } else {
-                    alert('This product is out of stock.');
-                }
+                    },
+                    error: function() {
+                        alert('Error adding product to cart. Please try again.');
+                    }
+                });
             });
 
             $('#cart-icon').on('click', function() {

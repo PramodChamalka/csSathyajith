@@ -6,7 +6,7 @@ include_once('db.php');
 // Function to get all products
 function getAllProducts() {
     global $conn;
-    $sql = "SELECT * FROM products";
+    $sql = "SELECT * FROM products where is_active = TRUE";
     $result = $conn->query($sql);
     return $result->fetch_all(MYSQLI_ASSOC);
 }
@@ -111,16 +111,16 @@ if (isset($_POST['update_product'])) {
     $stmt->close();
 }
 
-// Delete product
+// Soft delete product
 if (isset($_POST['delete_product'])) {
     $id = $_POST['product_id'];
-    $sql = "DELETE FROM products WHERE id = ?";
+    $sql = "UPDATE products SET is_active = FALSE WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $id);
     if ($stmt->execute()) {
-        echo "<script>alert('Product deleted successfully');</script>";
+        echo "<script>alert('Product deactivated successfully');</script>";
     } else {
-        echo "<script>alert('Error deleting product: " . $stmt->error . "');</script>";
+        echo "<script>alert('Error deactivating product: " . $stmt->error . "');</script>";
     }
     $stmt->close();
 }
