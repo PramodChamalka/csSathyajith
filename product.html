@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product View - Plantex</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/product-view.css">
+</head>
+<body>
+    <header class="header" id="header">
+        <nav class="nav container">
+            <a href="#" class="nav__logo">
+                <i class="ri-leaf-line nav__logo-icon"></i> Plantex
+            </a>
+
+            <div class="nav__menu" id="nav-menu">
+                <ul class="nav__list">
+                    <li class="nav__item">
+                        <a href="index.html" class="nav__link">Home</a>
+                    </li>
+                    <li class="nav__item">
+                        <a href="#products" class="nav__link active-link">Products</a>
+                    </li>
+                    <li class="nav__item">
+                        <a href="#faqs" class="nav__link">FAQs</a>
+                    </li>
+                    <li class="nav__item">
+                        <a href="#contact" class="nav__link">Contact Us</a>
+                    </li>
+                </ul>
+
+                <div class="nav__close" id="nav-close">
+                    <i class="ri-close-line"></i>
+                </div>
+            </div>
+
+            <div class="nav__btns">
+                <i class="ri-moon-line change-theme" id="theme-button"></i>
+
+                <div class="nav__toggle" id="nav-toggle">
+                    <i class="ri-menu-line"></i>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="product-view section container">
+            <div class="product-view__container">
+                <div class="product-view__img">
+                    <img src="assets/img/product1.png" alt="Cacti Plant" class="product-view__image">
+                </div>
+                <div class="product-view__content">
+                    <h2 class="product-view__title">Cacti Plant</h2>
+                    <span class="product-view__price">$19.99</span>
+                    <p class="product-view__description">
+                        The Cacti Plant is a beautiful, low-maintenance plant perfect for any home or office. 
+                        It thrives in bright, indirect light and requires minimal watering, making it ideal for busy plant enthusiasts.
+                    </p>
+                    <div class="product-view__details">
+                        <div class="product-view__detail">
+                            <i class="ri-sun-line"></i>
+                            <span>Bright, indirect light</span>
+                        </div>
+                        <div class="product-view__detail">
+                            <i class="ri-drop-line"></i>
+                            <span>Water sparingly</span>
+                        </div>
+                        <div class="product-view__detail">
+                            <i class="ri-ruler-line"></i>
+                            <span>Grows up to 12 inches</span>
+                        </div>
+                    </div>
+                    <div class="product-view__actions">
+                        <div class="product-view__quantity">
+                            <button class="quantity-btn minus">-</button>
+                            <input type="number" value="1" min="1" class="quantity-input">
+                            <button class="quantity-btn plus">+</button>
+                        </div>
+                        <button class="button product-view__button">
+                            <i class="ri-shopping-bag-line"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+
+    <footer class="footer section">
+        <!-- Footer content (same as in your original file) -->
+    </footer>
+    
+    <a href="#" class="scrollup" id="scroll-up"> 
+        <i class="ri-arrow-up-fill scrollup__icon"></i>
+    </a>
+
+    <script src="assets/js/scrollreveal.min.js"></script>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
