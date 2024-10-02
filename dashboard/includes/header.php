@@ -15,8 +15,8 @@
                 <h2>Admin Dashboard</h2>
             </div>
             <ul class="nav-links">
-                <li><a href="#">Home</a></li>
-                <li><a href="#">Settings</a></li>
+                <!-- <li><a href="#">Home</a></li>
+                <li><a href="#">Settings</a></li> -->
                 <li><a href="logout.php">Logout</a></li>
             </ul>
         </nav>
