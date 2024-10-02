@@ -1,16 +1,4 @@
-<?php
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Simple Authentication (For demonstration purposes)
-    $username = $_POST['username'];
-    $password = $_POST['password'];
 
-    if ($username == 'admin' && $password == 'password') {
-        header('Location: dashboard.php');
-    } else {
-        echo "<p>Invalid credentials</p>";
-    }
-}
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,35 +19,53 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <button type="submit">Login</button>
         </form>
+        <p>Have no account? <a href="signup.php">Signup</a></p>
     </div>
 </body>
 </html>
 
 <?php
 include_once('db.php');
-
-// login.php
 session_start();
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
+    // Prepare and execute the SQL statement
     $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
 
+    // Check if a user with the provided username exists
     if ($result->num_rows == 1) {
         $user = $result->fetch_assoc();
+
+        // Verify the password using password_verify()
         if (password_verify($password, $user['password'])) {
+            // Set session variables
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
+            $_SESSION['username'] = $user['username'];  
             $_SESSION['role'] = $user['role'];
-            header('Location: dashboard.php');
-            exit();
+
+            // Redirect based on role
+            if ($_SESSION['role'] === 'admin') {
+                header('Location: dashboard.php'); // Admin Dashboard
+                exit();
+            } else {
+                // Redirect non-admin users to a different page
+                echo "<script type='text/javascript'>
+                        alert('You are not an admin, redirecting to user dashboard.');
+                        window.location.href = '../index.html';
+                      </script>";
+                exit();
+            }
+        } else {
+            echo "<p>Invalid credentials</p>";
         }
+    } else {
+        echo "<p>Invalid credentials</p>";
     }
-    
-    echo "<p>Invalid credentials</p>";
 }
 ?>
