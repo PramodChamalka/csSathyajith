@@ -1,6 +1,6 @@
 <?php
-include('session.php');
-include_once('db.php');
+include('dashboard/session.php');
+include_once('dashboard/db.php');
 
 // Check if the user is an admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
