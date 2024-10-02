@@ -1,7 +1,6 @@
-<?php
-include('includes/header.php');
+
 include('session.php');
-include_once('db.php');
+include_once('dashboard/db.php');
 
 // Function to get cart items for the current user
 function getCartItems($user_id) {
