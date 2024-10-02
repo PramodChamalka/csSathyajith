@@ -23,7 +23,11 @@ if (isset($_POST['create_product'])) {
     $sql = "INSERT INTO products (name, price, description, light_requirement, water_requirement, max_growth) VALUES (?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("sdssss", $name, $price, $description, $light_requirement, $water_requirement, $max_growth);
-    $stmt->execute();
+    if ($stmt->execute()) {
+        echo "<script>alert('Product created successfully');</script>";
+    } else {
+        echo "<script>alert('Error creating product: " . $stmt->error . "');</script>";
+    }
     $stmt->close();
 }
 
@@ -40,7 +44,11 @@ if (isset($_POST['update_product'])) {
     $sql = "UPDATE products SET name = ?, price = ?, description = ?, light_requirement = ?, water_requirement = ?, max_growth = ? WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("sdssssi", $name, $price, $description, $light_requirement, $water_requirement, $max_growth, $id);
-    $stmt->execute();
+    if ($stmt->execute()) {
+        echo "<script>alert('Product updated successfully');</script>";
+    } else {
+        echo "<script>alert('Error updating product: " . $stmt->error . "');</script>";
+    }
     $stmt->close();
 }
 
@@ -50,7 +58,11 @@ if (isset($_POST['delete_product'])) {
     $sql = "DELETE FROM products WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $id);
-    $stmt->execute();
+    if ($stmt->execute()) {
+        echo "<script>alert('Product deleted successfully');</script>";
+    } else {
+        echo "<script>alert('Error deleting product: " . $stmt->error . "');</script>";
+    }
     $stmt->close();
 }
 
@@ -63,42 +75,68 @@ $products = getAllProducts();
         <div class="dashboard-content">
             <h1>Product Management</h1>
             
-            <!-- Create Product Form -->
-            <h2>Add New Product</h2>
-            <form method="post" class="product-form">
-                <input type="text" name="name" placeholder="Product Name" required>
-                <input type="number" name="price" placeholder="Price" step="0.01" required>
-                <textarea name="description" placeholder="Description" required></textarea>
-                <input type="text" name="light_requirement" placeholder="Light Requirement" required>
-                <input type="text" name="water_requirement" placeholder="Water Requirement" required>
-                <input type="text" name="max_growth" placeholder="Maximum Growth" required>
-                <button type="submit" name="create_product">Add Product</button>
-            </form>
+            <!-- Button to Open Create Product Modal -->
+            <button class="open-create-modal-btn" onclick="openCreateModal()">Add New Product</button>
 
             <!-- Product List -->
             <h2>Product List</h2>
-            <div class="product-list">
-                <?php foreach ($products as $product): ?>
-                <div class="product-item">
-                    <h3><?php echo $product['name']; ?></h3>
-                    <p>Price: $<?php echo $product['price']; ?></p>
-                    <p><?php echo $product['description']; ?></p>
-                    <button onclick="openUpdateModal(<?php echo htmlspecialchars(json_encode($product)); ?>)">Update</button>
-                    <form method="post" style="display: inline;">
-                        <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
-                        <button type="submit" name="delete_product" onclick="return confirm('Are you sure you want to delete this product?')">Delete</button>
-                    </form>
-                </div>
-                <?php endforeach; ?>
-            </div>
+            <table class="product-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Description</th>
+                        <th>Light Requirement</th>
+                        <th>Water Requirement</th>
+                        <th>Max Growth</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($products as $product): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($product['name']); ?></td>
+                        <td>$<?php echo htmlspecialchars($product['price']); ?></td>
+                        <td><?php echo htmlspecialchars($product['description']); ?></td>
+                        <td><?php echo htmlspecialchars($product['light_requirement']); ?></td>
+                        <td><?php echo htmlspecialchars($product['water_requirement']); ?></td>
+                        <td><?php echo htmlspecialchars($product['max_growth']); ?></td>
+                        <td>
+                            <button class="update-btn" onclick='openUpdateModal(<?php echo json_encode($product); ?>)'>Update</button>
+                            <form method="post" style="display: inline;">
+                                <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                                <button class="delete-btn" type="submit" name="delete_product" onclick="return confirm('Are you sure you want to delete this product?')">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </main>
+</div>
+
+<!-- Create Product Modal -->
+<div id="createModal" class="modal">
+    <div class="modal-content">
+        <span class="close-create">&times;</span>
+        <h2>Add New Product</h2>
+        <form method="post" class="product-form">
+            <input type="text" name="name" placeholder="Product Name" required>
+            <input type="number" name="price" placeholder="Price" step="0.01" required>
+            <textarea name="description" placeholder="Description" required></textarea>
+            <input type="text" name="light_requirement" placeholder="Light Requirement" required>
+            <input type="text" name="water_requirement" placeholder="Water Requirement" required>
+            <input type="text" name="max_growth" placeholder="Maximum Growth" required>
+            <button type="submit" name="create_product">Add Product</button>
+        </form>
+    </div>
 </div>
 
 <!-- Update Product Modal -->
 <div id="updateModal" class="modal">
     <div class="modal-content">
-        <span class="close">&times;</span>
+        <span class="close-update">&times;</span>
         <h2>Update Product</h2>
         <form id="updateForm" method="post" class="product-form">
             <input type="hidden" id="update_product_id" name="product_id">
@@ -114,8 +152,14 @@ $products = getAllProducts();
 </div>
 
 <script>
-var modal = document.getElementById("updateModal");
-var span = document.getElementsByClassName("close")[0];
+var createModal = document.getElementById("createModal");
+var updateModal = document.getElementById("updateModal");
+var closeCreate = document.getElementsByClassName("close-create")[0];
+var closeUpdate = document.getElementsByClassName("close-update")[0];
+
+function openCreateModal() {
+    createModal.style.display = "block";
+}
 
 function openUpdateModal(product) {
     document.getElementById("update_product_id").value = product.id;
@@ -125,16 +169,23 @@ function openUpdateModal(product) {
     document.getElementById("update_light_requirement").value = product.light_requirement;
     document.getElementById("update_water_requirement").value = product.water_requirement;
     document.getElementById("update_max_growth").value = product.max_growth;
-    modal.style.display = "block";
+    updateModal.style.display = "block";
 }
 
-span.onclick = function() {
-    modal.style.display = "none";
+closeCreate.onclick = function() {
+    createModal.style.display = "none";
+}
+
+closeUpdate.onclick = function() {
+    updateModal.style.display = "none";
 }
 
 window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = "none";
+    if (event.target == createModal) {
+        createModal.style.display = "none";
+    }
+    if (event.target == updateModal) {
+        updateModal.style.display = "none";
     }
 }
 </script>
